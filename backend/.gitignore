@@ -1,0 +1,34 @@
+# Virtual environment
+venv/
+.env/
+.envrc/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Logs
+*.log
+
+# SQLite database (if you're using one locally)
+*.db
+*.sqlite3
+
+# Uvicorn / runtime files
+*.pid
+*.sock
+
+# Secrets / environment variables
+.env
+.env.*
