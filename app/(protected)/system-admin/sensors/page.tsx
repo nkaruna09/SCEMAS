@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/types/database";
-
+ 
 type Sensor = Database["public"]["Tables"]["sensors"]["Row"];
 export default function Sensors() {
   const [sensors, setSensors] = useState<Sensor[]>([]);
