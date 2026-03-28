@@ -54,15 +54,15 @@ export default function AlertRulesPage() {
       [name]: name === 'threshold_value' ? parseFloat(value) : value,
     }))
   }
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!formData.metric_type || !formData.threshold_value) {
-      alert('Please fill in all fields')
-      return
+    e.preventDefault();
+  
+    if (!formData.metric_type || formData.threshold_value == null) {
+      alert('Please fill in all fields');
+      return;
     }
-
+  
     try {
       if (editingId) {
         const { error } = await supabase
@@ -73,9 +73,13 @@ export default function AlertRulesPage() {
             operator: formData.operator,
             severity: formData.severity,
           })
-          .eq('id', editingId)
-
-        if (error) throw error
+          .eq('id', editingId);
+  
+        if (error) {
+          console.error('Error updating alert rule:', error);
+          alert(`Error updating alert rule: ${error.message}`);
+          return;
+        }
       } else {
         const { error } = await supabase
           .from('alert_rules')
@@ -86,25 +90,29 @@ export default function AlertRulesPage() {
               operator: formData.operator,
               severity: formData.severity,
             },
-          ])
-
-        if (error) throw error
+          ]);
+  
+        if (error) {
+          console.error('Error creating alert rule:', error);
+          alert(`Error creating alert rule: ${error.message}`);
+          return;
+        }
       }
-
+  
       setFormData({
         metric_type: '',
-        threshold_value: '',
+        threshold_value: null, // Reset to null or 0
         operator: '>',
         severity: 'medium',
-      })
-      setEditingId(null)
-      setShowForm(false)
-      fetchRules()
+      });
+      setEditingId(null);
+      setShowForm(false);
+      fetchRules();
     } catch (error) {
-      console.error('Error saving alert rule:', error)
-      alert('Error saving alert rule')
+      console.error('Unexpected error saving alert rule:', error);
+      alert('Unexpected error saving alert rule');
     }
-  }
+  };
 
   const handleEdit = (rule: AlertRule) => {
     setFormData({
