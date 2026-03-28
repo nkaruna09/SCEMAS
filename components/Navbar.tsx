@@ -16,6 +16,8 @@ const NAV_LINKS: Record<Role, { label: string; href: string }[]> = {
     { label: 'Users', href: '/system-admin/users' },
     { label: 'Sensors', href: '/system-admin/sensors' },
     { label: 'Audit Log', href: '/system-admin/audit-log' },
+    { label: 'Alerts', href: '/city-operator/alerts' },
+    { label: 'Alert Rules', href: '/city-operator/alert-rules' },
   ],
   government_official: [
     { label: 'Overview', href: '/government' },
