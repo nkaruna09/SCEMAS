@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/lib/types/database'
-import GraphDisplay from '@/components/GraphDisplay' // Adjust the path as necessary
+import GraphDisplay from '@/components/GraphDisplay'
 
 type Alert = Database['public']['Tables']['alerts']['Row'] & {
   alert_rules?: Database['public']['Tables']['alert_rules']['Row']
