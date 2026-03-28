@@ -14,7 +14,7 @@ function GraphDisplay() {
     return () => {
       controller.abort()
 
-      // ✅ cleanup blob URLs to avoid memory leaks
+      //cleanup blob URLs to avoid memory leaks
       graphUrls.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [])
@@ -51,14 +51,14 @@ function GraphDisplay() {
 
           const blob = await response.blob()
 
-          // ✅ ensure it's actually an image
+          //ensure it's actually an image
           if (!blob.type.includes('image')) {
             throw new Error('Response is not an image')
           }
 
           return URL.createObjectURL(blob)
         } catch (err) {
-          console.error(`❌ Graph fetch failed for ${sensorId}:`, err)
+          console.error(`Graph fetch failed for ${sensorId}:`, err)
           return null
         }
       })
@@ -73,9 +73,9 @@ function GraphDisplay() {
 
       setGraphUrls(validUrls)
     } catch (err: any) {
-      console.error('❌ Error fetching graphs:', err)
+      console.error('Error fetching graphs:', err)
 
-      // ✅ helpful user-facing error
+      //user-facing error
       setError(
         'Unable to load graphs. Make sure backend is running on http://127.0.0.1:8000 and CORS is enabled.'
       )

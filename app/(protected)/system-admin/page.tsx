@@ -75,10 +75,16 @@ export default function SystemAdminDashboard() {
       {/* Graph (display graphs from backend) */}
       <section className="bg-white p-6 rounded-2xl shadow-sm border">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Telemetry Graphs</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Telemetry Graphs
+          </h2>
         </div>
-        <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
-          <GraphDisplay />
+
+        {/* Scrollable container */}
+        <div className="h-64 bg-gray-100 rounded-lg overflow-y-auto p-4">
+          <div className="space-y-4">
+            <GraphDisplay />
+          </div>
         </div>
       </section>
 
