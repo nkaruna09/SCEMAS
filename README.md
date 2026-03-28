@@ -2,6 +2,9 @@
 
 Smart City Environmental Monitoring and Alert System — McMaster SE 3A04, Group T01-G3.
 
+Front-end: Next.js 
+Back-end: Supabase, FastAPI
+
 ## Prerequisites
 
 - Node.js 18+
