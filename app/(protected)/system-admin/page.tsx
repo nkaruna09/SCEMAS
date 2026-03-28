@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/lib/types/database'
+import GraphDisplay from '@/components/GraphDisplay' // Adjust the path as necessary
 
 type Alert = Database['public']['Tables']['alerts']['Row'] & {
   alert_rules?: Database['public']['Tables']['alert_rules']['Row']
@@ -71,14 +72,13 @@ export default function SystemAdminDashboard() {
         ))}
       </section>
 
-      {/* Graph (placeholder for graph-generator utility) */}
+      {/* Graph (display graphs from backend) */}
       <section className="bg-white p-6 rounded-2xl shadow-sm border">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900"> Telemetry Graphs</h2>
-          <button className="text-sm text-blue-600 hover:underline"> View All </button>
+          <h2 className="text-lg font-semibold text-gray-900">Telemetry Graphs</h2>
         </div>
         <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
-          <p className="text-gray-500">Graph visualization coming soon</p>
+          <GraphDisplay />
         </div>
       </section>
 
