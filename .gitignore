@@ -20,4 +20,10 @@ dist/
 .idea/
 .vscode/
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+backend/venv/
+
 CLAUDE.md
