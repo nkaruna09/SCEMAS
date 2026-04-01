@@ -48,6 +48,50 @@ export default function AuditLog() {
 
   const dedup = (values: string[]) => Array.from(new Set(values)).sort()
 
+  const renderAuditDetails = (entry: AuditEntry) => {
+    if (entry.table_name === 'user_roles') {
+      const affectedUserId = entry.new_val?.user_id || entry.old_val?.user_id
+      if (entry.action === 'INSERT') {
+        return <span>User <strong>{affectedUserId}</strong> assigned role: <strong>{entry.new_val?.role}</strong></span>
+      } else if (entry.action === 'UPDATE') {
+        return <span>User <strong>{affectedUserId}</strong> role changed from <strong>{entry.old_val?.role}</strong> to <strong>{entry.new_val?.role}</strong></span>
+      } else if (entry.action === 'DELETE') {
+        return <span>User <strong>{affectedUserId}</strong> role removed: <strong>{entry.old_val?.role}</strong></span>
+      }
+    } else if (entry.table_name === 'alert_rules') {
+      if (entry.action === 'INSERT') {
+        return <span>New alert rule created: {entry.new_val?.metric_type} {entry.new_val?.operator} {entry.new_val?.threshold_value} (severity: {entry.new_val?.severity})</span>
+      } else if (entry.action === 'UPDATE') {
+        const changes = []
+        if (entry.old_val?.threshold_value !== entry.new_val?.threshold_value) {
+          changes.push(`threshold: ${entry.old_val?.threshold_value} → ${entry.new_val?.threshold_value}`)
+        }
+        if (entry.old_val?.operator !== entry.new_val?.operator) {
+          changes.push(`operator: ${entry.old_val?.operator} → ${entry.new_val?.operator}`)
+        }
+        if (entry.old_val?.severity !== entry.new_val?.severity) {
+          changes.push(`severity: ${entry.old_val?.severity} → ${entry.new_val?.severity}`)
+        }
+        return <span>Alert rule updated: {entry.new_val?.metric_type} - {changes.join(', ')}</span>
+      } else if (entry.action === 'DELETE') {
+        return <span>Alert rule deleted: {entry.old_val?.metric_type} {entry.old_val?.operator} {entry.old_val?.threshold_value}</span>
+      }
+    } else if (entry.table_name === 'alerts') {
+      if (entry.action === 'UPDATE') {
+        if (entry.old_val?.status !== entry.new_val?.status) {
+          return <span>Alert status changed from <strong>{entry.old_val?.status}</strong> to <strong>{entry.new_val?.status}</strong></span>
+        }
+      }
+    }
+
+    // Fallback to JSON for other tables
+    return entry.action === 'DELETE' ? (
+      <code>{JSON.stringify(entry.old_val, null, 2)}</code>
+    ) : (
+      <code>{JSON.stringify(entry.new_val ?? entry.old_val, null, 2)}</code>
+    )
+  }
+
   return (
     <main className="p-8 bg-gray-50 min-h-screen space-y-6">
       <div>
@@ -119,11 +163,7 @@ export default function AuditLog() {
                     <td className="px-3 py-2 text-gray-700 uppercase">{entry.action}</td>
                     <td className="px-3 py-2 text-gray-700">{entry.table_name}</td>
                     <td className="px-3 py-2 text-gray-600 max-w-xl break-words">
-                      {entry.action === 'DELETE' ? (
-                        <code>{JSON.stringify(entry.old_val, null, 2)}</code>
-                      ) : (
-                        <code>{JSON.stringify(entry.new_val ?? entry.old_val, null, 2)}</code>
-                      )}
+                      {renderAuditDetails(entry)}
                     </td>
                   </tr>
                 ))}

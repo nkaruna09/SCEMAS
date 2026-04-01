@@ -21,3 +21,5 @@ dist/
 .vscode/
 
 CLAUDE.md
+
+generated_graphs/
