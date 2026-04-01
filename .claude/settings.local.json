@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/tmp/project_map.txt:*)",
+      "Read(//tmp/**)"
+    ]
+  }
+}
