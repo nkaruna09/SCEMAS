@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/lib/types/database'
+import GraphDisplay from '@/components/GraphDisplay'
 
 type Alert = Database['public']['Tables']['alerts']['Row'] & {
   alert_rules?: Database['public']['Tables']['alert_rules']['Row']
@@ -71,17 +72,23 @@ export default function SystemAdminDashboard() {
         ))}
       </section>
 
-      {/* Graph (to be done with python) */}
+      {/* Graph (display graphs from backend) */}
       <section className="bg-white p-6 rounded-2xl shadow-sm border">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900"> Telemetry Graphs</h2>
-          <button className="text-sm text-blue-600 hover:underline"> View All </button>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Telemetry Graphs
+          </h2>
         </div>
-        {/* Placeholder graph (until graph gen service is implemented*/}
-        <div className="h-64 flex items-center justify-center bg-gray-100 rounded-xl border-dashed border-2 border-gray-300 text-gray-400"> Graph Placeholder (Python-genrated graph goes here) </div>
+
+        {/* Scrollable container */}
+        <div className="h-64 bg-gray-100 rounded-lg overflow-y-auto p-4">
+          <div className="space-y-4">
+            <GraphDisplay />
+          </div>
+        </div>
       </section>
 
-      {/* Alerts and logs*/}
+      {/* Alerts and logs */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Active alerts */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border">
@@ -131,7 +138,7 @@ export default function SystemAdminDashboard() {
         </div>
       </section>
 
-      {/* controls and System info*/}
+      {/* controls and System info */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* status updates */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border">

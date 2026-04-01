@@ -1,0 +1,49 @@
+{
+  "alerts": [
+    {
+      "id": 1,
+      "sensors": {
+        "name": "Temperature Sensor",
+        "metric_type": "temperature",
+        "zone_id": 101
+      },
+      "alert_rules": {
+        "severity": "critical",
+        "metric_type": "temperature",
+        "threshold_value": 75,
+        "operator": "greater_than"
+      },
+      "triggered_at": "2023-10-01T12:00:00Z"
+    },
+    {
+      "id": 2,
+      "sensors": {
+        "name": "Humidity Sensor",
+        "metric_type": "humidity",
+        "zone_id": 102
+      },
+      "alert_rules": {
+        "severity": "high",
+        "metric_type": "humidity",
+        "threshold_value": 60,
+        "operator": "greater_than"
+      },
+      "triggered_at": "2023-10-01T12:05:00Z"
+    },
+    {
+      "id": 3,
+      "sensors": {
+        "name": "Pressure Sensor",
+        "metric_type": "pressure",
+        "zone_id": 103
+      },
+      "alert_rules": {
+        "severity": "medium",
+        "metric_type": "pressure",
+        "threshold_value": 30,
+        "operator": "less_than"
+      },
+      "triggered_at": "2023-10-01T12:10:00Z"
+    }
+  ]
+}

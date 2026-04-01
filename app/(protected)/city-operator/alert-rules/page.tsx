@@ -6,6 +6,13 @@ import type { Database } from '@/lib/types/database'
 
 type AlertRule = Database['public']['Tables']['alert_rules']['Row']
 
+type FormDataType = {
+  metric_type: string
+  threshold_value: string
+  operator: '>' | '<' | '>=' | '<=' | '='
+  severity: 'low' | 'medium' | 'high' | 'critical'
+}
+
 const severityColors: Record<string, string> = {
   low: 'bg-blue-100 text-blue-800',
   medium: 'bg-yellow-100 text-yellow-800',
@@ -18,11 +25,11 @@ export default function AlertRulesPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataType>({
     metric_type: '',
     threshold_value: '',
-    operator: '>' as const,
-    severity: 'medium' as const,
+    operator: '>',
+    severity: 'medium',
   })
   const supabase = createClient()
 
@@ -63,13 +70,26 @@ export default function AlertRulesPage() {
       return
     }
 
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      alert('You must be logged in to create or update alert rules')
+      return
+    }
+
     try {
+      const updateData = {
+        metric_type: formData.metric_type,
+        threshold_value: parseFloat(formData.threshold_value),
+        operator: formData.operator,
+        severity: formData.severity,
+      }
+
       if (editingId) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('alert_rules')
           .update({
             metric_type: formData.metric_type,
-            threshold_value: formData.threshold_value,
+            threshold_value: parseFloat(formData.threshold_value),
             operator: formData.operator,
             severity: formData.severity,
           })
@@ -77,16 +97,12 @@ export default function AlertRulesPage() {
 
         if (error) throw error
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('alert_rules')
-          .insert([
-            {
-              metric_type: formData.metric_type,
-              threshold_value: formData.threshold_value,
-              operator: formData.operator,
-              severity: formData.severity,
-            },
-          ])
+          .insert([{
+            ...updateData,
+            created_by: user.id,
+          }])
 
         if (error) throw error
       }
