@@ -49,46 +49,49 @@ export default function AuditLog() {
   const dedup = (values: string[]) => Array.from(new Set(values)).sort()
 
   const renderAuditDetails = (entry: AuditEntry) => {
+    const oldVal = entry.old_val as Record<string, any> | null
+    const newVal = entry.new_val as Record<string, any> | null
+    const affectedUserId = newVal?.user_id || oldVal?.user_id
+
     if (entry.table_name === 'user_roles') {
-      const affectedUserId = entry.new_val?.user_id || entry.old_val?.user_id
       if (entry.action === 'INSERT') {
-        return <span>User <strong>{affectedUserId}</strong> assigned role: <strong>{entry.new_val?.role}</strong></span>
+        return <span>User <strong>{affectedUserId}</strong> assigned role: <strong>{newVal?.role}</strong></span>
       } else if (entry.action === 'UPDATE') {
-        return <span>User <strong>{affectedUserId}</strong> role changed from <strong>{entry.old_val?.role}</strong> to <strong>{entry.new_val?.role}</strong></span>
+        return <span>User <strong>{affectedUserId}</strong> role changed from <strong>{oldVal?.role}</strong> to <strong>{newVal?.role}</strong></span>
       } else if (entry.action === 'DELETE') {
-        return <span>User <strong>{affectedUserId}</strong> role removed: <strong>{entry.old_val?.role}</strong></span>
+        return <span>User <strong>{affectedUserId}</strong> role removed: <strong>{oldVal?.role}</strong></span>
       }
     } else if (entry.table_name === 'alert_rules') {
       if (entry.action === 'INSERT') {
-        return <span>New alert rule created: {entry.new_val?.metric_type} {entry.new_val?.operator} {entry.new_val?.threshold_value} (severity: {entry.new_val?.severity})</span>
+        return <span>New alert rule created: {newVal?.metric_type} {newVal?.operator} {newVal?.threshold_value} (severity: {newVal?.severity})</span>
       } else if (entry.action === 'UPDATE') {
         const changes = []
-        if (entry.old_val?.threshold_value !== entry.new_val?.threshold_value) {
-          changes.push(`threshold: ${entry.old_val?.threshold_value} → ${entry.new_val?.threshold_value}`)
+        if (oldVal?.threshold_value !== newVal?.threshold_value) {
+          changes.push(`threshold: ${oldVal?.threshold_value} → ${newVal?.threshold_value}`)
         }
-        if (entry.old_val?.operator !== entry.new_val?.operator) {
-          changes.push(`operator: ${entry.old_val?.operator} → ${entry.new_val?.operator}`)
+        if (oldVal?.operator !== newVal?.operator) {
+          changes.push(`operator: ${oldVal?.operator} → ${newVal?.operator}`)
         }
-        if (entry.old_val?.severity !== entry.new_val?.severity) {
-          changes.push(`severity: ${entry.old_val?.severity} → ${entry.new_val?.severity}`)
+        if (oldVal?.severity !== newVal?.severity) {
+          changes.push(`severity: ${oldVal?.severity} → ${newVal?.severity}`)
         }
-        return <span>Alert rule updated: {entry.new_val?.metric_type} - {changes.join(', ')}</span>
+        return <span>Alert rule updated: {newVal?.metric_type} - {changes.join(', ')}</span>
       } else if (entry.action === 'DELETE') {
-        return <span>Alert rule deleted: {entry.old_val?.metric_type} {entry.old_val?.operator} {entry.old_val?.threshold_value}</span>
+        return <span>Alert rule deleted: {oldVal?.metric_type} {oldVal?.operator} {oldVal?.threshold_value}</span>
       }
     } else if (entry.table_name === 'alerts') {
       if (entry.action === 'UPDATE') {
-        if (entry.old_val?.status !== entry.new_val?.status) {
-          return <span>Alert status changed from <strong>{entry.old_val?.status}</strong> to <strong>{entry.new_val?.status}</strong></span>
+        if (oldVal?.status !== newVal?.status) {
+          return <span>Alert status changed from <strong>{oldVal?.status}</strong> to <strong>{newVal?.status}</strong></span>
         }
       }
     }
 
     // Fallback to JSON for other tables
     return entry.action === 'DELETE' ? (
-      <code>{JSON.stringify(entry.old_val, null, 2)}</code>
+      <code>{JSON.stringify(oldVal, null, 2)}</code>
     ) : (
-      <code>{JSON.stringify(entry.new_val ?? entry.old_val, null, 2)}</code>
+      <code>{JSON.stringify(newVal ?? oldVal, null, 2)}</code>
     )
   }
 
