@@ -57,13 +57,18 @@ function GraphDisplay() {
           }
 
           return URL.createObjectURL(blob)
-        } catch (err) {
-          console.error(`Graph fetch failed for ${sensorId}:`, err)
+        } catch (err: any) {
+          //ignore aborts from StrictMode cleanup
+          if (err?.name !== 'AbortError') {
+            console.error(`Graph fetch failed for ${sensorId}:`, err)
+          }
           return null
         }
       })
 
       const results = await Promise.all(graphPromises)
+      //bail if request abort
+      if (signal.aborted) return
 
       const validUrls = results.filter((url): url is string => !!url)
 
@@ -73,18 +78,16 @@ function GraphDisplay() {
 
       setGraphUrls(validUrls)
     } catch (err: any) {
+      //ignore abort, error for failrue
+      if (err?.name === 'AbortError') return
       console.error('Error fetching graphs:', err)
-
-      //user-facing error
       setError(
-        'Unable to load graphs. Make sure backend is running on http://127.0.0.1:8000 and CORS is enabled.'
+        'Unable to load graphs. Make sure the backend is running on http://localhost:8000.'
       )
     } finally {
-      setLoading(false)
+      if (!signal.aborted) setLoading(false)
     }
   }
-
-  // ---------------- UI ----------------
 
   if (loading) {
     return <p className="text-gray-500">Loading graphs...</p>

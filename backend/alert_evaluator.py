@@ -1,0 +1,110 @@
+import logging
+import os
+import uuid
+from datetime import datetime, timezone
+
+from supabase import create_client, Client
+from dotenv import load_dotenv
+
+from models.telemetry_reading import TelemetryReading
+from models.alert_rule import AlertRule
+from models.alert_notification import AlertNotification
+
+load_dotenv()
+logger = logging.getLogger(__name__)
+
+
+class AlertEvaluator:
+    # loads rules evanyate readings and send alerts
+    def __init__(self) -> None:
+        self._active_rules: dict[str, list[AlertRule]] = {}
+        self._alert_severity: str = ""
+        self._supabase: Client = create_client(
+            os.environ["SUPABASE_URL"],
+            os.environ["SUPABASE_SERVICE_ROLE_KEY"],
+        )
+
+    def load_alert_rules(self) -> None:
+        # fetch rules from DB at startup
+        try:
+            response = self._supabase.table("alert_rules").select("*").execute()
+            self._active_rules.clear()
+            for row in response.data:
+                rule = AlertRule(
+                    id=row["id"],
+                    metric_type=row["metric_type"],
+                    threshold_value=float(row["threshold_value"]),
+                    operator=row["operator"],
+                    severity=row["severity"],
+                )
+                self._active_rules.setdefault(rule.metric_type, []).append(rule)
+            logger.info(
+                f"[AlertEvaluator] Loaded {sum(len(v) for v in self._active_rules.values())} "
+                f"rules across {len(self._active_rules)} metric types"
+            )
+        except Exception as exc:
+            logger.error(f"[AlertEvaluator] Failed to load alert rules: {exc}")
+
+    def evaluate_data(self, reading: TelemetryReading) -> None:
+        # check rules for each metric type
+        rules = self._active_rules.get(reading.telemetry_type)
+        if not rules:
+            logger.debug(f"[AlertEvaluator] No rules for '{reading.telemetry_type}', skipping")
+            return
+
+        for rule in rules:
+            breached = not self.check_alert_rules(reading.value, reading.telemetry_type, rule)
+            if breached:
+                self._notify_threshold_exceeded(reading, rule)
+            else:
+                logger.info(
+                    f"[AlertEvaluator] Within threshold: sensor={reading.sensor_id} value={reading.value}"
+                )
+
+    def check_alert_rules(self, value: float, telemetry_type: str, rule: AlertRule) -> bool:
+        # true if value is within the acceptable range
+        op = rule.operator
+        t = rule.threshold_value
+        if op == ">":   return not (value > t)
+        if op == "<":   return not (value < t)
+        if op == ">=":  return not (value >= t)
+        if op == "<=":  return not (value <= t)
+        if op == "=":   return not (value == t)
+        logger.warning(f"[AlertEvaluator] Unknown operator '{op}' in rule {rule.id}")
+        return True
+
+    def monitor_alert_severity(self, value: float, rule: AlertRule) -> str:
+        # check delta from threshold
+        delta = abs(value - rule.threshold_value)
+        if delta <= 5:   return "low"
+        if delta <= 15:  return "medium"
+        if delta <= 30:  return "high"
+        return "critical"
+
+    def trigger_alert(self, alert: AlertNotification) -> None:
+        # insert the alert into supabase and log it
+        try:
+            self._supabase.table("alerts").insert(alert.to_dict()).execute()
+            alert.display_alert()
+            logger.info(f"[AlertEvaluator] Alert triggered: {alert.alert_id}")
+        except Exception as exc:
+            logger.error(f"[AlertEvaluator] Failed to insert alert: {exc}")
+
+    def notify_threshold_exceeded(self) -> None:
+        logger.info("[AlertEvaluator] Threshold exceeded — notification dispatched")
+
+    def _notify_threshold_exceeded(self, reading: TelemetryReading, rule: AlertRule) -> None:
+        severity = self.monitor_alert_severity(reading.value, rule)
+        self._alert_severity = severity
+        alert = AlertNotification(
+            alert_id=str(uuid.uuid4()),
+            sensor_id=reading.sensor_id,
+            telemetry_type=reading.telemetry_type,
+            measurement=reading.value,
+            threshold_value=rule.threshold_value,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            severity=severity,
+            rule_id=rule.id,
+        )
+        self.trigger_alert(alert)
+        self.notify_threshold_exceeded()

@@ -1,4 +1,8 @@
-matplotlib
-pandas
-fastapi
-uvicorn
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+supabase>=2.4.0
+python-dotenv>=1.0.0
+matplotlib>=3.8.0
+numpy>=1.26.0
+pydantic>=2.0.0
+requests>=2.32.0
