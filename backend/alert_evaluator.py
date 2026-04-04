@@ -108,3 +108,109 @@ class AlertEvaluator:
         )
         self.trigger_alert(alert)
         self.notify_threshold_exceeded()
+
+#control layer for alert tule managemnt
+    def create_alert_rule(self, rule_data) -> dict:
+        #make and validate new rule, called by FastAPI POST /alert-rules endpoint
+        try:
+            #input validation
+            if not rule_data.metric_type or not rule_data.operator or not rule_data.severity:
+                return None
+
+            rule_id = str(uuid.uuid4())
+            rule_dict = {
+                "id": rule_id,
+                "metric_type": rule_data.metric_type,
+                "threshold_value": float(rule_data.threshold_value),
+                "operator": rule_data.operator,
+                "severity": rule_data.severity,
+            }
+            self._supabase.table("alert_rules").insert(rule_dict).execute()
+            rule = AlertRule(
+                id=rule_id,
+                metric_type=rule_data.metric_type,
+                threshold_value=float(rule_data.threshold_value),
+                operator=rule_data.operator,
+                severity=rule_data.severity,
+            )
+            self._active_rules.setdefault(rule.metric_type, []).append(rule)
+            logger.info(f"[AlertEvaluator] Created alert rule: {rule_id}")
+            return rule_dict
+        except Exception as exc:
+            logger.error(f"[AlertEvaluator] Failed to create alert rule: {exc}")
+            return None
+
+    def update_alert_rule(self, rule_id: str, rule_data) -> dict:
+        #update rule, same process as craete
+        try:
+            if not rule_data.metric_type or not rule_data.operator or not rule_data.severity:
+                return None
+            rule_dict = {
+                "metric_type": rule_data.metric_type,
+                "threshold_value": float(rule_data.threshold_value),
+                "operator": rule_data.operator,
+                "severity": rule_data.severity,
+            }
+            response = (
+                self._supabase.table("alert_rules")
+                .update(rule_dict)
+                .eq("id", rule_id)
+                .execute()
+            )
+            if not response.data:
+                logger.warning(f"[AlertEvaluator] Alert rule not found: {rule_id}")
+                return None
+
+            #refresh cache, reload rules from db
+            self.load_alert_rules()
+
+            logger.info(f"[AlertEvaluator] Updated alert rule: {rule_id}")
+            return rule_dict
+        except Exception as exc:
+            logger.error(f"[AlertEvaluator] Failed to update alert rule: {exc}")
+            return None
+
+    def delete_alert_rule(self, rule_id: str) -> bool:
+        #dleete alert rule, called by FastAPI DELETE /alert-rules/{id} endpoint.
+        try:
+            response = (
+                self._supabase.table("alert_rules").delete().eq("id", rule_id).execute()
+            )
+            if not response.data:
+                logger.warning(f"[AlertEvaluator] Alert rule not found: {rule_id}")
+                return False
+            # Reload rules
+            self.load_alert_rules()
+
+            logger.info(f"[AlertEvaluator] Deleted alert rule: {rule_id}")
+            return True
+        except Exception as exc:
+            logger.error(f"[AlertEvaluator] Failed to delete alert rule: {exc}")
+            return False
+
+    #control layer for alert status mgmt
+    def update_alert_status(self, alert_id: str, status: str) -> bool:
+        #uodate or change alert syatus
+        try:
+            if status not in ["acknowledged", "resolved"]:
+                logger.warning(f"[AlertEvaluator] Invalid status: {status}")
+                return False
+            update_dict = {"status": status}
+            if status == "resolved":
+                update_dict["resolved_at"] = datetime.now(timezone.utc).isoformat()
+            #db update
+            response = (
+                self._supabase.table("alerts")
+                .update(update_dict)
+                .eq("id", alert_id)
+                .execute()
+            )
+            if not response.data:
+                logger.warning(f"[AlertEvaluator] Alert not found: {alert_id}")
+                return False
+            logger.info(f"[AlertEvaluator] Updated alert {alert_id} status to {status}")
+            return True
+        except Exception as exc:
+            logger.error(f"[AlertEvaluator] Failed to update alert status: {exc}")
+            return False
+

@@ -12,14 +12,18 @@ logger = logging.getLogger(__name__)
 
 
 class TelemetryProcessor:
-    # recieve and store readings
-    def __init__(self) -> None:
+    #telemetry control layer, set ingestion pipeline, validate, store, then call alert eval and audit log control layers
+
+    def __init__(self, alert_evaluator=None, audit_logger=None) -> None:
         self.ingestion_buffer: list[TelemetryReading] = []
         self._active_sensors: list[str] = []
         self._supabase: Client = create_client(
             os.environ["SUPABASE_URL"],
             os.environ["SUPABASE_SERVICE_ROLE_KEY"],
         )
+        # References to other Control layer agents
+        self._alert_evaluator = alert_evaluator
+        self._audit_logger = audit_logger
 
     def receive_telemetry(self, reading: TelemetryReading) -> None:
         self.ingestion_buffer.append(reading)
@@ -30,6 +34,12 @@ class TelemetryProcessor:
 
         if self.validate_telemetry(reading):
             self.store_telemetry(reading)
+            #PAC control layer -telemetryProcessor links calls to sibling agents
+            if self._alert_evaluator:
+                self._alert_evaluator.evaluate_data(reading)
+            if self._audit_logger:
+                self._audit_logger.log_telemetry_reading(reading)
+            self.notify_dashboard()
         else:
             logger.warning(f"[TelemetryProcessor] Invalid reading from {reading.sensor_id}, skipping")
 
