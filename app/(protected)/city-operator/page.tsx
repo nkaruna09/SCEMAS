@@ -30,7 +30,7 @@ export default function CityOperatorDashboard() {
         `)
         .eq('status', 'active')
         .order('triggered_at', { ascending: false })
-        .limit(10)
+        .limit(5)
 
       if (error) throw error
       setAlerts(data || [])
@@ -99,7 +99,7 @@ export default function CityOperatorDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {alerts.slice(0, 5).map((alert) => (
+                {alerts.map((alert) => (
                   <tr key={alert.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                       {alert.sensors?.name || 'Unknown'}

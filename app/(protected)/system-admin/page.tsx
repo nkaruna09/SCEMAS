@@ -31,7 +31,7 @@ export default function SystemAdminDashboard() {
         `)
         .eq('status', 'active')
         .order('triggered_at', { ascending: false })
-        .limit(10)
+        .limit(4)
 
       if (error) throw error
       setAlerts(data || [])
@@ -102,7 +102,7 @@ export default function SystemAdminDashboard() {
             <div className="text-center text-gray-500 py-4">No active alerts</div>
           ) : (
             <div className="space-y-3">
-              {alerts.slice(0, 4).map((alert) => (
+              {alerts.map((alert) => (
                 <div key={alert.id} className="p-4 rounded-xl border bg-gray-50 flex justify-between items-center" >
                   <div>
                     <p className="font-medium text-gray-800">{alert.sensors?.name}</p>

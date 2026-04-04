@@ -94,13 +94,18 @@ class AlertEvaluator:
         logger.info("[AlertEvaluator] Threshold exceeded — notification dispatched")
 
     def _notify_threshold_exceeded(self, reading: TelemetryReading, rule: AlertRule) -> None:
-        #skip if an active/acknowledged alert already exists for this sensor+rule
+        # skip if any active/acknowledged alert already exists for this sensor+metric_type
+        # (checks all rules for the same metric type, not just this rule, to prevent one
+        # alert per rule when multiple rules share the same metric type)
         try:
+            metric_rule_ids = [
+                r.id for r in self._active_rules.get(rule.metric_type, [])
+            ]
             existing = (
                 self._supabase.table("alerts")
                 .select("id")
                 .eq("sensor_id", reading.sensor_id)
-                .eq("rule_id", rule.id)
+                .in_("rule_id", metric_rule_ids)
                 .in_("status", ["active", "acknowledged"])
                 .limit(1)
                 .execute()
@@ -108,7 +113,7 @@ class AlertEvaluator:
             if existing.data:
                 logger.info(
                     f"[AlertEvaluator] Alert already active for sensor={reading.sensor_id} "
-                    f"rule={rule.id}, skipping duplicate"
+                    f"metric={rule.metric_type}, skipping duplicate"
                 )
                 return
         except Exception as exc:
