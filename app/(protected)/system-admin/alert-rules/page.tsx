@@ -298,7 +298,7 @@ export default function AlertRulesPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(rule.created_at).toLocaleDateString()}
+                    {rule.created_at ? new Date(rule.created_at).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 text-sm space-x-2">
                     <button
