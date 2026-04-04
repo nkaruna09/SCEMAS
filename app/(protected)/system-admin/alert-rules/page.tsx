@@ -70,14 +70,8 @@ export default function AlertRulesPage() {
       return
     }
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      alert('You must be logged in to create or update alert rules')
-      return
-    }
-
     try {
-      const updateData = {
+      const payload = {
         metric_type: formData.metric_type,
         threshold_value: parseFloat(formData.threshold_value),
         operator: formData.operator,
@@ -85,26 +79,21 @@ export default function AlertRulesPage() {
       }
 
       if (editingId) {
-        const { error } = await (supabase as any)
-          .from('alert_rules')
-          .update({
-            metric_type: formData.metric_type,
-            threshold_value: parseFloat(formData.threshold_value),
-            operator: formData.operator,
-            severity: formData.severity,
-          })
-          .eq('id', editingId)
-
-        if (error) throw error
+        // Update via API route (forwards to FastAPI AlertEvaluator)
+        const response = await fetch(`/api/alert-rules/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!response.ok) throw new Error('Failed to update alert rule')
       } else {
-        const { error } = await (supabase as any)
-          .from('alert_rules')
-          .insert([{
-            ...updateData,
-            created_by: user.id,
-          }])
-
-        if (error) throw error
+        // Create via API route (forwards to FastAPI AlertEvaluator)
+        const response = await fetch('/api/alert-rules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!response.ok) throw new Error('Failed to create alert rule')
       }
 
       setFormData({
@@ -137,12 +126,11 @@ export default function AlertRulesPage() {
     if (!confirm('Are you sure you want to delete this alert rule?')) return
 
     try {
-      const { error } = await supabase
-        .from('alert_rules')
-        .delete()
-        .eq('id', ruleId)
-
-      if (error) throw error
+      // Delete via API route (forwards to FastAPI AlertEvaluator)
+      const response = await fetch(`/api/alert-rules/${ruleId}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete alert rule')
       fetchRules()
     } catch (error) {
       console.error('Error deleting alert rule:', error)
@@ -310,7 +298,7 @@ export default function AlertRulesPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(rule.created_at).toLocaleDateString()}
+                    {rule.created_at ? new Date(rule.created_at).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 text-sm space-x-2">
                     <button

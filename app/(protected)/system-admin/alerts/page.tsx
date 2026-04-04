@@ -58,12 +58,11 @@ export default function AlertsPage() {
 
   const handleAcknowledge = async (alertId: string) => {
     try {
-      const { error } = await supabase
-        .from('alerts')
-        .update({ status: 'acknowledged' })
-        .eq('id', alertId)
-
-      if (error) throw error
+      // Acknowledge via API route (forwards to FastAPI AlertEvaluator)
+      const response = await fetch(`/api/alerts/${alertId}/acknowledge`, {
+        method: 'PATCH',
+      })
+      if (!response.ok) throw new Error('Failed to acknowledge alert')
       fetchAlerts()
     } catch (error) {
       console.error('Error acknowledging alert:', error)
@@ -72,15 +71,11 @@ export default function AlertsPage() {
 
   const handleResolve = async (alertId: string) => {
     try {
-      const { error } = await supabase
-        .from('alerts')
-        .update({ 
-          status: 'resolved',
-          resolved_at: new Date().toISOString()
-        })
-        .eq('id', alertId)
-
-      if (error) throw error
+      // resolve and fwd to AlertEvaluator
+      const response = await fetch(`/api/alerts/${alertId}/resolve`, {
+        method: 'PATCH',
+      })
+      if (!response.ok) throw new Error('Failed to resolve alert')
       fetchAlerts()
     } catch (error) {
       console.error('Error resolving alert:', error)
