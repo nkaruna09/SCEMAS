@@ -30,6 +30,17 @@ export default function AlertsPage() {
 
   useEffect(() => {
     fetchAlerts()
+
+    const channel = supabase
+      .channel('system-admin-alerts-page')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => {
+        fetchAlerts()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const fetchAlerts = async () => {
