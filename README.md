@@ -130,3 +130,20 @@ GET /api/public/alerts?status=resolved&severity=critical
 
 Valid `status`: `active`, `acknowledged`, `resolved`
 Valid `severity`: `low`, `medium`, `high`, `critical`
+
+### Testing rate limiting
+
+The public API is limited to 60 requests per minute per IP. To test it, run this in PowerShell while the dev server is running:
+
+```powershell
+1..65 | ForEach-Object {
+  try {
+    $r = Invoke-WebRequest -Uri http://localhost:3000/api/public/zones -UseBasicParsing -TimeoutSec 5
+    Write-Host "Request $_`: $($r.StatusCode)"
+  } catch {
+    Write-Host "Request $_`: $($_.Exception.Response.StatusCode.value__)"
+  }
+}
+```
+
+Requests 1–60 return `200`. Requests 61–65 return `429 Too Many Requests`. The window resets after 60 seconds.

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 //service role so unauthenticated callers can still read data
 const supabaseAdmin = createClient(
@@ -12,6 +13,9 @@ const MAX_LIMIT = 500
 const DEFAULT_LIMIT = 100
 
 export async function GET(request: NextRequest) {
+  const limited = checkRateLimit(request)
+  if (limited) return limited
+
   const { searchParams } = new URL(request.url)
   const sensor_id = searchParams.get('sensor_id')
   const zone_id = searchParams.get('zone_id')
