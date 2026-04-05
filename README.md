@@ -65,6 +65,28 @@ Open [http://localhost:3000](http://localhost:3000). Sign up — you'll be assig
 
 To change a user's role, update their row in the `user_roles` table via the Supabase Table Editor.
 
+## Running the backend (FastAPI)
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate       # Windows
+# source venv/bin/activate  # Mac/Linux
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+Runs at `http://localhost:8000`
+
+## Running the telemetry simulator
+
+Generates fake sensor readings and sends them to the backend. Run this after the backend is up.
+
+```bash
+cd backend
+python simulate_sensors.py
+```
+
 ## Other commands
 
 ```bash
@@ -72,3 +94,68 @@ npm run build      # Production build
 npm run lint       # ESLint
 npx tsc --noEmit   # Type-check
 ```
+
+## Public signage display
+
+A public kiosk view showing live alerts and sensor readings. No login required.
+
+```
+http://localhost:3000/signage
+```
+
+Refreshes automatically every 30 seconds.
+
+---
+
+## Public API
+
+No authentication required. Base URL: `http://localhost:3000`
+
+### Zones
+```
+GET /api/public/zones
+```
+
+### Sensors
+```
+GET /api/public/sensors
+GET /api/public/sensors?zone_id=<id>
+GET /api/public/sensors?metric_type=temperature
+```
+
+### Telemetry readings
+```
+GET /api/public/telemetry
+GET /api/public/telemetry?sensor_id=<id>
+GET /api/public/telemetry?zone_id=<id>&metric_type=temperature
+GET /api/public/telemetry?limit=50
+```
+
+Max limit: 500. Default: 100.
+
+### Alerts
+```
+GET /api/public/alerts
+GET /api/public/alerts?status=active
+GET /api/public/alerts?status=resolved&severity=critical
+```
+
+Valid `status`: `active`, `acknowledged`, `resolved`
+Valid `severity`: `low`, `medium`, `high`, `critical`
+
+### Testing rate limiting
+
+The public API is limited to 60 requests per minute per IP. To test it, run this in PowerShell while the dev server is running:
+
+```powershell
+1..65 | ForEach-Object {
+  try {
+    $r = Invoke-WebRequest -Uri http://localhost:3000/api/public/zones -UseBasicParsing -TimeoutSec 5
+    Write-Host "Request $_`: $($r.StatusCode)"
+  } catch {
+    Write-Host "Request $_`: $($_.Exception.Response.StatusCode.value__)"
+  }
+}
+```
+
+Requests 1–60 return `200`. Requests 61–65 return `429 Too Many Requests`. The window resets after 60 seconds.
