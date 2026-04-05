@@ -65,6 +65,28 @@ Open [http://localhost:3000](http://localhost:3000). Sign up — you'll be assig
 
 To change a user's role, update their row in the `user_roles` table via the Supabase Table Editor.
 
+## Running the backend (FastAPI)
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate       # Windows
+# source venv/bin/activate  # Mac/Linux
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+Runs at `http://localhost:8000`
+
+## Running the telemetry simulator
+
+Generates fake sensor readings and sends them to the backend. Run this after the backend is up.
+
+```bash
+cd backend
+python simulate_sensors.py
+```
+
 ## Other commands
 
 ```bash
@@ -72,3 +94,39 @@ npm run build      # Production build
 npm run lint       # ESLint
 npx tsc --noEmit   # Type-check
 ```
+
+## Public API
+
+No authentication required. Base URL: `http://localhost:3000`
+
+### Zones
+```
+GET /api/public/zones
+```
+
+### Sensors
+```
+GET /api/public/sensors
+GET /api/public/sensors?zone_id=<id>
+GET /api/public/sensors?metric_type=temperature
+```
+
+### Telemetry readings
+```
+GET /api/public/telemetry
+GET /api/public/telemetry?sensor_id=<id>
+GET /api/public/telemetry?zone_id=<id>&metric_type=temperature
+GET /api/public/telemetry?limit=50
+```
+
+Max limit: 500. Default: 100.
+
+### Alerts
+```
+GET /api/public/alerts
+GET /api/public/alerts?status=active
+GET /api/public/alerts?status=resolved&severity=critical
+```
+
+Valid `status`: `active`, `acknowledged`, `resolved`
+Valid `severity`: `low`, `medium`, `high`, `critical`
