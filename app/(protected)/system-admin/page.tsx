@@ -18,6 +18,17 @@ export default function SystemAdminDashboard() {
 
   useEffect(() => {
     fetchActiveAlerts()
+
+    const channel = supabase
+      .channel('system-admin-alerts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => {
+        fetchActiveAlerts()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const fetchActiveAlerts = async () => {

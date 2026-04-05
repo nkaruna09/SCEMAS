@@ -17,6 +17,17 @@ export default function CityOperatorDashboard() {
 
   useEffect(() => {
     fetchActiveAlerts()
+
+    const channel = supabase
+      .channel('city-operator-alerts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => {
+        fetchActiveAlerts()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const fetchActiveAlerts = async () => {
