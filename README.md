@@ -95,6 +95,18 @@ npm run lint       # ESLint
 npx tsc --noEmit   # Type-check
 ```
 
+## Public signage display
+
+A public kiosk view showing live alerts and sensor readings. No login required.
+
+```
+http://localhost:3000/signage
+```
+
+Refreshes automatically every 30 seconds.
+
+---
+
 ## Public API
 
 No authentication required. Base URL: `http://localhost:3000`
