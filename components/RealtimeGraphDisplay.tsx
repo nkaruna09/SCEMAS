@@ -465,10 +465,10 @@ export default function RealtimeGraphDisplay() {
                   if (name === 'value') {
                     return [
                       `${Number(value).toFixed(1)} ${currentSensor.unit}`,
-                      '📊 Real-time Data',
+                      'Real-time Data',
                     ]
                   }
-                  return [`${Number(value).toFixed(1)} ${currentSensor.unit}`, '🔮 Predicted']
+                  return [`${Number(value).toFixed(1)} ${currentSensor.unit}`, 'Predicted']
                 }}
                 labelStyle={{ color: '#fff', fontSize: 12 }}
               />
@@ -478,8 +478,8 @@ export default function RealtimeGraphDisplay() {
                   color: '#666',
                 }}
                 formatter={(value) => {
-                  if (value === 'value') return '📊 Real-time Data'
-                  if (value === 'predictedValue') return '🔮 Predicted Data'
+                  if (value === 'value') return 'Real-time Data'
+                  if (value === 'predictedValue') return 'Predicted Data'
                   return value
                 }}
               />
@@ -540,7 +540,7 @@ export default function RealtimeGraphDisplay() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <p className="text-xs text-blue-600 font-semibold">📊 Current Value</p>
+          <p className="text-xs text-blue-600 font-semibold">Current Value</p>
           <p className="text-2xl font-bold text-blue-900 mt-1">
             {chartData.length > 0
               ? chartData
@@ -551,7 +551,7 @@ export default function RealtimeGraphDisplay() {
           </p>
         </div>
         <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-          <p className="text-xs text-red-600 font-semibold">🔮 Next Prediction</p>
+          <p className="text-xs text-red-600 font-semibold">Next Prediction</p>
           <p className="text-2xl font-bold text-red-900 mt-1">
             {chartData.length > 0
               ? chartData
@@ -562,7 +562,7 @@ export default function RealtimeGraphDisplay() {
           </p>
         </div>
         <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-          <p className="text-xs text-green-600 font-semibold">📉 Min Value</p>
+          <p className="text-xs text-green-600 font-semibold">Min Value</p>
           <p className="text-2xl font-bold text-green-900 mt-1">
             {chartData.length > 0
               ? Math.min(
@@ -575,7 +575,7 @@ export default function RealtimeGraphDisplay() {
           </p>
         </div>
         <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-          <p className="text-xs text-orange-600 font-semibold">📈 Max Value</p>
+          <p className="text-xs text-orange-600 font-semibold">Max Value</p>
           <p className="text-2xl font-bold text-orange-900 mt-1">
             {chartData.length > 0
               ? Math.max(
@@ -594,20 +594,19 @@ export default function RealtimeGraphDisplay() {
         <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-            <span className="font-semibold text-gray-800">📊 Real-time Data</span>
+            <span className="font-semibold text-gray-800">Real-time Data</span>
           </div>
           <p className="text-xs text-gray-600">Actual measurements from sensors, updated every 5 seconds</p>
         </div>
         <div className="p-4 bg-red-50 rounded-lg border border-red-200">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1 h-6 bg-red-500 rounded-full" style={{ borderTop: '2px dashed #ef4444' }}></div>
-            <span className="font-semibold text-gray-800">🔮 Predicted Data</span>
+            <span className="font-semibold text-gray-800">Predicted Data</span>
           </div>
           <p className="text-xs text-gray-600">Forecast based on linear regression trend analysis (red dashed line)</p>
         </div>
         <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
           <div className="flex items-center gap-2 mb-2">
-            <span className="font-bold text-purple-600 text-lg">⚡</span>
             <span className="font-semibold text-gray-800">Auto-Refresh</span>
           </div>
           <p className="text-xs text-gray-600">Data updates automatically. No manual refresh needed</p>
