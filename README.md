@@ -140,6 +140,39 @@ When an alert fires, each registered URL receives:
 
 If a `secret` was provided, the request includes an `X-SCEMAS-Signature` header (HMAC-SHA256) for verification.
 
+## MQTT bridge (HiveMQ)
+
+Sensors publish readings to HiveMQ. The bridge subscribes and forwards them to `/api/ingest`.
+
+**First-time setup** — install the dependency:
+```powershell
+cd backend
+npm install mqtt
+```
+
+**Run the bridge** (keep this running alongside `npm run dev`):
+```powershell
+$env:MQTT_USER="SCEMAS"; $env:MQTT_PASS="SCEMASd4"; node mqtt-bridge.js
+```
+You should see `connected to HiveMQ` and `subscribed to scemas/readings`.
+
+**Test general telemetry** — publish a single reading:
+```powershell
+$env:MQTT_USER="SCEMAS"; $env:MQTT_PASS="SCEMASd4"; node mqtt-publish-test.js
+```
+The script auto-fetches the first active `air_quality` sensor. If it says `no zone_id`, run this in the Supabase SQL editor first:
+```sql
+INSERT INTO zones (id, name) VALUES ('019e523c-8c8e-404f-9ccd-f367bc24c1c1', 'Test Zone') ON CONFLICT (id) DO NOTHING;
+UPDATE sensors SET zone_id = '019e523c-8c8e-404f-9ccd-f367bc24c1c1' WHERE zone_id IS NULL;
+```
+
+**What to expect:**
+- Bridge terminal shows `forwarded [air_quality=100] → 201` ... `forwarded [air_quality=146] → 201`
+- The 10 rising readings (100→146) stay below the `air_quality > 150` threshold
+- A purple **trend** badge appears (5 consecutive rising readings detected)
+- An orange **predicted** badge appears (linear projection crosses 150)
+- Check the Alerts page to confirm both badges
+
 ## Running the telemetry simulator
 
 Generates fake sensor readings and sends them to the backend. Run this after the backend is up.

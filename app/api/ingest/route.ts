@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
     .insert({ sensor_id, zone_id, metric_type, value })
 
   if (error) {
+    console.error('telemetry insert error:', JSON.stringify(error))
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
