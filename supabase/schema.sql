@@ -18,6 +18,8 @@ create table sensors (
   metric_type text not null,
   status      text not null default 'active' check (status in ('active','inactive','maintenance')),
   approved    boolean not null default false,
+  latitude    double precision,
+  longitude   double precision,
   created_at  timestamptz not null default now()
 );
 

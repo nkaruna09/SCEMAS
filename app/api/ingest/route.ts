@@ -47,8 +47,7 @@ export async function POST(request: NextRequest) {
   runTrendDetection(sensor_id, metric_type, value).catch(console.error)
   runPrediction(sensor_id, metric_type).catch(console.error)
 
-  //query alerts created by the DB trigger just now for this sensor
-  //small buffer to account for trigger execution time
+  // Query alerts created by the DB trigger for this sensor in the last 2 seconds
   const since = new Date(Date.now() - 2000).toISOString()
   const { data: newAlerts } = await supabaseAdmin
     .from('alerts')
@@ -58,7 +57,6 @@ export async function POST(request: NextRequest) {
     .gte('triggered_at', since)
 
   if (newAlerts && newAlerts.length > 0) {
-    //flatten joined rule fields onto each alert for the webhook payload
     const payload = newAlerts.map((a) => ({
       id: a.id,
       sensor_id: a.sensor_id,
@@ -70,7 +68,6 @@ export async function POST(request: NextRequest) {
       metric_type: (a.alert_rules as { metric_type?: string } | null)?.metric_type,
     }))
 
-    //fire and forget so we dont block the response
     dispatchWebhooks(payload).catch(console.error)
   }
 

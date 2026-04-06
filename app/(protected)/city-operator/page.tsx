@@ -1,9 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/lib/types/database'
+
+const SensorMap = dynamic(() => import('@/components/SensorMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-96 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 text-sm">
+      Loading map...
+    </div>
+  ),
+})
 
 type Alert = Database['public']['Tables']['alerts']['Row'] & {
   alert_rules?: Database['public']['Tables']['alert_rules']['Row']
@@ -74,6 +84,15 @@ export default function CityOperatorDashboard() {
           <p className="text-sm text-gray-600">System Status</p>
           <p className="text-3xl font-bold text-blue-600">Normal</p>
         </div>
+      </div>
+
+      {/* Sensor Map */}
+      <div className="mt-8 bg-white rounded-lg shadow p-6">
+        <h2 className="text-lg font-semibold mb-1">Sensor Locations</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Click a marker for details. Red markers indicate an active alert.
+        </p>
+        <SensorMap />
       </div>
 
       {/* Recent Alerts Section */}

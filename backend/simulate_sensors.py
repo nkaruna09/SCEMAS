@@ -21,11 +21,11 @@ SEED_ZONES = [
 ]
 
 SEED_SENSORS = [
-    {"name": "Temperature Sensor - Central Station", "metric_type": "temperature"},
-    {"name": "Humidity Sensor - Library",            "metric_type": "humidity"},
-    {"name": "Air Quality Sensor - Park",            "metric_type": "air_quality"},
-    {"name": "Pressure Sensor - Harbor",             "metric_type": "pressure"},
-    {"name": "Temperature Sensor - Hospital",        "metric_type": "temperature"},
+    {"name": "Temperature Sensor - Central Station", "metric_type": "temperature", "latitude": 43.2609, "longitude": -79.9192},
+    {"name": "Humidity Sensor - Library",            "metric_type": "humidity",    "latitude": 43.2628, "longitude": -79.9175},
+    {"name": "Air Quality Sensor - Park",            "metric_type": "air_quality", "latitude": 43.2650, "longitude": -79.9235},
+    {"name": "Pressure Sensor - Harbor",             "metric_type": "pressure",    "latitude": 43.2571, "longitude": -79.9173},
+    {"name": "Temperature Sensor - Hospital",        "metric_type": "temperature", "latitude": 43.2597, "longitude": -79.9158},
 ]
 
 SEED_RULES = [

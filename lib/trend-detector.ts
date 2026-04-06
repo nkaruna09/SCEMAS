@@ -5,11 +5,8 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 )
 
-//how many readings to look back for trend analysis
 const LOOKBACK = 10
-//consecutive readings in same direction to call it a trend
 const TREND_RUN = 5
-//std deviations above mean to call it a spike
 const SPIKE_THRESHOLD = 2.5
 
 function mean(vals: number[]): number {
@@ -21,11 +18,9 @@ function stddev(vals: number[], avg: number): number {
   return Math.sqrt(variance)
 }
 
-//returns 'trend_up' | 'trend_down' | 'spike' | null
 function detectAnomaly(values: number[]): string | null {
   if (values.length < TREND_RUN) return null
 
-  //check for sustained consecutive trend in the most recent readings
   const recent = values.slice(0, TREND_RUN)
   let allUp = true
   let allDown = true
@@ -36,9 +31,9 @@ function detectAnomaly(values: number[]): string | null {
   if (allUp) return 'trend_up'
   if (allDown) return 'trend_down'
 
-  //spike detection — latest value vs mean/stddev of all lookback readings
+  // Spike: latest value is more than SPIKE_THRESHOLD std deviations from the baseline mean
   if (values.length >= 3) {
-    const baseline = values.slice(1) //exclude the latest reading
+    const baseline = values.slice(1)
     const avg = mean(baseline)
     const sd = stddev(baseline, avg)
     if (sd > 0 && Math.abs(values[0] - avg) > SPIKE_THRESHOLD * sd) {
@@ -49,7 +44,6 @@ function detectAnomaly(values: number[]): string | null {
 }
 
 export async function runTrendDetection(sensor_id: string, metric_type: string, latestValue: number) {
-  //fetch recent readings for this sensor ordered newest first
   const { data: readings, error } = await supabaseAdmin
     .from('telemetry_readings')
     .select('value')
@@ -63,7 +57,8 @@ export async function runTrendDetection(sensor_id: string, metric_type: string, 
   const anomaly = detectAnomaly(values)
 
   if (!anomaly) return
-  //dont spam so weskip if an active trend alert already exists for this sensor
+
+  // Skip if an active trend alert already exists for this sensor (no rule_id = trend alert)
   const { data: existing } = await supabaseAdmin
     .from('alerts')
     .select('id')
@@ -74,7 +69,6 @@ export async function runTrendDetection(sensor_id: string, metric_type: string, 
 
   if (existing && existing.length > 0) return
 
-  //insert trend alert severity='trend' so the ui can identify it without relying on the join
   await supabaseAdmin.from('alerts').insert({
     sensor_id,
     rule_id: null,

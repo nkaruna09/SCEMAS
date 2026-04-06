@@ -35,6 +35,8 @@ export type SensorRow = {
   metric_type: string
   status: string
   approved?: boolean
+  latitude?: number | null
+  longitude?: number | null
   created_at?: string
 }
 
