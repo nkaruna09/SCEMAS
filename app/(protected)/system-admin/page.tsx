@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/lib/types/database'
-import GraphDisplay from '@/components/GraphDisplay'
+import RealtimeGraphDisplay from '@/components/RealtimeGraphDisplay'
 
 type Alert = Database['public']['Tables']['alerts']['Row'] & {
   alert_rules?: Database['public']['Tables']['alert_rules']['Row']
@@ -19,44 +19,60 @@ export default function SystemAdminDashboard() {
   const [sensors, setSensors] = useState<Sensor[]>([])
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
+  const [hasInitialized, setHasInitialized] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
-    fetchAll()
+    // Only load once on mount
+    if (!hasInitialized) {
+      fetchAll()
+      setHasInitialized(true)
+    }
 
-    const channel = supabase
+    // Subscribe for updates without refetching everything
+    const alertsChannel = supabase
       .channel('system-admin-alerts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => {
-        fetchAll()
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, (payload) => {
+        // Incrementally update state instead of full refetch
+        if (payload.eventType === 'INSERT') {
+          setAlerts((prev) => [payload.new as Alert, ...prev].slice(0, 4))
+        } else if (payload.eventType === 'UPDATE') {
+          setAlerts((prev) =>
+            prev.map((a) => (a.id === payload.new.id ? (payload.new as Alert) : a))
+          )
+        }
       })
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
-  }, [])
+    return () => { supabase.removeChannel(alertsChannel) }
+  }, [hasInitialized])
 
   const fetchAll = async () => {
-    const [alertRes, sensorRes, auditRes] = await Promise.all([
-      supabase
-        .from('alerts')
-        .select('*, alert_rules (id, metric_type, threshold_value, operator, severity), sensors (id, name, metric_type, zone_id)')
-        .eq('status', 'active')
-        .order('triggered_at', { ascending: false })
-        .limit(4),
-      supabase
-        .from('sensors')
-        .select('*')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('audit_log')
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(5),
-    ])
+    try {
+      const [alertRes, sensorRes, auditRes] = await Promise.all([
+        supabase
+          .from('alerts')
+          .select('*, alert_rules (id, metric_type, threshold_value, operator, severity), sensors (id, name, metric_type, zone_id)')
+          .eq('status', 'active')
+          .order('triggered_at', { ascending: false })
+          .limit(4),
+        supabase
+          .from('sensors')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('audit_log')
+          .select('*')
+          .order('timestamp', { ascending: false })
+          .limit(5),
+      ])
 
-    if (!alertRes.error) setAlerts(alertRes.data || [])
-    if (!sensorRes.error) setSensors(sensorRes.data || [])
-    if (!auditRes.error) setAuditLogs(auditRes.data || [])
-    setLoading(false)
+      if (!alertRes.error) setAlerts(alertRes.data || [])
+      if (!sensorRes.error) setSensors(sensorRes.data || [])
+      if (!auditRes.error) setAuditLogs(auditRes.data || [])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const activeAlertCount = alerts.length
@@ -99,12 +115,8 @@ export default function SystemAdminDashboard() {
           </h2>
         </div>
 
-        {/* Scrollable container */}
-        <div className="h-64 bg-gray-100 rounded-lg overflow-y-auto p-4">
-          <div className="space-y-4">
-            <GraphDisplay />
-          </div>
-        </div>
+        {/* Real-time graph with no scroll */}
+        <RealtimeGraphDisplay />
       </section>
 
       {/* Alerts and logs */}
