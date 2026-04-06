@@ -78,6 +78,21 @@ uvicorn main:app --reload
 
 Runs at `http://localhost:8000`
 
+## Trend / anomaly alerts
+
+In addition to rule-based alerts, the system automatically detects anomalous sensor behaviour. A **trend alert** is created when a sensor reports 5 consecutive readings moving in the same direction, or a sudden spike (>2.5 std deviations from recent baseline). These appear with a purple **trend** badge on the alerts page and have no associated threshold rule.
+
+To trigger one, send 6 steadily increasing readings for the same sensor (replace `your-sensor-id`):
+```powershell
+$headers = @{ "x-api-key" = "your-api-key"; "Content-Type" = "application/json" }
+1..6 | ForEach-Object {
+  $body = @{ sensor_id = "your-sensor-id"; zone_id = "your-zone-id"; metric_type = "temperature"; value = (50 + $_) } | ConvertTo-Json
+  Invoke-WebRequest -Uri http://localhost:3000/api/ingest -Method POST -Headers $headers -Body $body
+  Start-Sleep -Milliseconds 300
+}
+```
+A trend alert should appear on the Alerts page within a few seconds.
+
 ## Webhook notifications
 
 External systems can subscribe to receive a POST request whenever a new alert is triggered.

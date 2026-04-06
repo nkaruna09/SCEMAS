@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { dispatchWebhooks } from '@/lib/webhook-dispatcher'
+import { runTrendDetection } from '@/lib/trend-detector'
 
 // Service-role client — bypasses RLS for trusted sensor writes
 const supabaseAdmin = createClient(
@@ -33,8 +34,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields: sensor_id, zone_id, metric_type, value' }, { status: 400 })
   }
 
-  const insertedAt = new Date().toISOString()
-
   const { error } = await supabaseAdmin
     .from('telemetry_readings')
     .insert({ sensor_id, zone_id, metric_type, value })
@@ -42,6 +41,9 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  //run trend/anomaly detection fire-and-forget
+  runTrendDetection(sensor_id, metric_type, value).catch(console.error)
 
   //query alerts created by the DB trigger just now for this sensor
   //small buffer to account for trigger execution time

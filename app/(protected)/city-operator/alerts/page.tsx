@@ -161,12 +161,18 @@ export default function AlertsPage() {
                     {alert.value.toFixed(2)}
                   </td>
                   <td className="px-6 py-4 text-sm font-mono text-gray-900">
-                    {alert.alert_rules?.operator} {alert.alert_rules?.threshold_value}
+                    {!alert.alert_rules ? <span className="text-gray-400 text-xs">anomaly detected</span> : `${alert.alert_rules.operator} ${alert.alert_rules.threshold_value}`}
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${severityColors[alert.alert_rules?.severity || 'low']}`}>
-                      {alert.alert_rules?.severity || 'unknown'}
-                    </span>
+                    {!alert.alert_rules ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        trend
+                      </span>
+                    ) : (
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${severityColors[alert.alert_rules.severity ?? 'low']}`}>
+                        {alert.alert_rules.severity}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[alert.status]}`}>
