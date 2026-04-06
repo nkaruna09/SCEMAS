@@ -324,7 +324,7 @@ export default function RealtimeGraphDisplay() {
               {currentSensor.label}
               <span className="text-lg text-gray-500 font-normal ml-2">({currentSensor.unit})</span>
             </h3>
-            <p className="text-sm text-gray-600 mt-1">📍 {currentSensor.zone}</p>
+            <p className="text-sm text-gray-600 mt-1">Location: {currentSensor.zone}</p>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-500">Live Value</p>
