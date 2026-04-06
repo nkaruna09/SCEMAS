@@ -194,8 +194,24 @@ create trigger trg_audit_user_roles
 after insert or update or delete on user_roles
 for each row execute function fn_audit_log();
 
--- ── Supabase Realtime ─────────────────────────────────────────
--- Enable realtime on tables the frontend subscribes to.
+-- webhook subscription so external systems register here to get notified on new alerts
+
+create table webhook_subscriptions (
+  id         uuid primary key default gen_random_uuid(),
+  url        text not null,
+  secret     text,
+  active     boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+alter table webhook_subscriptions enable row level security;
+
+-- only admins can manage webhook subscriptions
+create policy "webhooks: admin manage"
+  on webhook_subscriptions for all to authenticated
+  using (public.user_role() = 'system_admin');
+
+-- Supabase realtime on tables the frontend subscribes to
 
 alter publication supabase_realtime add table telemetry_readings;
 alter publication supabase_realtime add table alerts;

@@ -25,8 +25,10 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  // Public API and signage display — no auth required
+  // Public API and signage display so no auth required
   if (pathname.startsWith('/api/public')) return response
+  if (pathname.startsWith('/api/ingest')) return response
+  if (pathname.startsWith('/api/webhooks')) return response
   if (pathname.startsWith('/signage')) return response
 
   // Unauthenticated user hitting a protected route → login
@@ -34,7 +36,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Authenticated user hitting /login → redirect to their dashboard
+  // Authenticated user hitting /login will redirect to their dashboard
   if (user && pathname.startsWith('/login')) {
     const { data: roleRow } = await supabase
       .from('user_roles')

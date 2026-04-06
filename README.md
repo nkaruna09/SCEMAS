@@ -78,6 +78,35 @@ uvicorn main:app --reload
 
 Runs at `http://localhost:8000`
 
+## Webhook notifications
+
+External systems can subscribe to receive a POST request whenever a new alert is triggered.
+
+```
+POST /api/webhooks          # register a URL
+GET  /api/webhooks          # list subscriptions
+DELETE /api/webhooks/:id    # remove a subscription
+PATCH  /api/webhooks/:id    # pause/resume (body: {"active": false})
+```
+
+Example registration:
+```bash
+curl -X POST http://localhost:3000/api/webhooks \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://your-system.com/alert-handler", "secret": "optional-signing-secret"}'
+```
+
+When an alert fires, each registered URL receives:
+```json
+{
+  "event": "alert.triggered",
+  "timestamp": "...",
+  "alerts": [{ "id": "...", "sensor_id": "...", "value": 999, "severity": "high", "metric_type": "temperature" }]
+}
+```
+
+If a `secret` was provided, the request includes an `X-SCEMAS-Signature` header (HMAC-SHA256) for verification.
+
 ## Running the telemetry simulator
 
 Generates fake sensor readings and sends them to the backend. Run this after the backend is up.
