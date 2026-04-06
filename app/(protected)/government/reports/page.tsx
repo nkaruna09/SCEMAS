@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import GraphDisplay from '@/components/GraphDisplay'
+import RealtimeGraphDisplay from '@/components/RealtimeGraphDisplay'
 
 interface AlertReport {
   id: string
@@ -207,7 +207,7 @@ export default function Reports() {
 
       <section className="bg-white p-6 rounded-2xl shadow-sm border">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Environmental Graphs</h2>
-        <GraphDisplay />
+        <RealtimeGraphDisplay />
       </section>
     </main>
   )
