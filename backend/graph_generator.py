@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class GraphData:
-    # make contriner for graph
     metric_type: str
     zone: str
     data_points: list[float] = field(default_factory=list)
@@ -79,7 +78,6 @@ class GraphGenerator:
         return base64.b64encode(buf.read()).decode("utf-8")
 
     def send_graph_data(self, telemetry_data: list[TelemetryReading]) -> dict:
-        # called by FastAPI /graphs/generate — returns data points, timestamps, and base64 PNG
         graph_data = self.calculate_graph_data(telemetry_data)
         image_b64 = self.convert_to_visual_graph(graph_data)
 

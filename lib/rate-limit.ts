@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 const LIMIT = 60
 const WINDOW_MS = 60_000
 
-//module mapstays across requests/api routes
 const store = new Map<string, { count: number; resetAt: number }>()
 
 export function getIp(request: NextRequest): string {
@@ -14,7 +13,6 @@ export function getIp(request: NextRequest): string {
   )
 }
 
-//ret 429 if rate limited/ null if ok
 export function checkRateLimit(request: NextRequest): NextResponse | null {
   const ip = getIp(request)
   const now = Date.now()

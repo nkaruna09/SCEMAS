@@ -29,7 +29,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'url is required' }, { status: 400 })
   }
 
-  //basic url validation
   try { new URL(body.url) } catch {
     return NextResponse.json({ error: 'invalid url' }, { status: 400 })
   }

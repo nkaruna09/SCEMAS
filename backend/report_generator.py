@@ -1,7 +1,3 @@
-#control layer report generator - make report and read telem readings and alerts
-#activated by telemproc when alert confirmed
-
-
 import logging
 import os
 from datetime import datetime, timedelta
@@ -14,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class ReportData: #struct data returned to FE
+class ReportData:
     report_id: str
     generated_at: str
     metric_type: str
@@ -22,7 +18,7 @@ class ReportData: #struct data returned to FE
     alert_count: int
     critical_count: int
     high_count: int
-    data_points: list= None  #includes [tiemstamp, val]
+    data_points: list = None
     summary: str = ""
 
     def to_dict(self) -> dict:
@@ -38,19 +34,16 @@ class ReportData: #struct data returned to FE
             "summary": self.summary,
         }
 
-class ReportGenerator: #control layter manages report table
+
+class ReportGenerator:
     def __init__(self) -> None:
-        self._supabase: Client =create_client(
+        self._supabase: Client = create_client(
             os.environ["SUPABASE_URL"],
             os.environ["SUPABASE_SERVICE_ROLE_KEY"],
         )
 
-    def generate_report(
-        self, metric_type: str, zone: str, hours: int = 24
-    ) -> ReportData:
-        #generate report and query telem
+    def generate_report(self, metric_type: str, zone: str, hours: int = 24) -> ReportData:
         try:
-            # repository pattern - directly query telemetry
             cutoff_time = (datetime.utcnow() - timedelta(hours=hours)).isoformat()
             telemetry_response = (
                 self._supabase.table("telemetry_readings")
@@ -63,7 +56,6 @@ class ReportGenerator: #control layter manages report table
             )
             telemetry_data = telemetry_response.data or []
 
-            # repo pattern - direct query assoc. alerts
             alerts_response = (
                 self._supabase.table("alerts")
                 .select("*, alert_rules(metric_type)")
@@ -75,7 +67,7 @@ class ReportGenerator: #control layter manages report table
             alert_count = len(alerts)
             critical_count = sum(1 for a in alerts if a.get("severity") == "critical")
             high_count = sum(1 for a in alerts if a.get("severity") == "high")
-            #get data poinnts
+
             data_points = [
                 (reading["timestamp"], reading["value"])
                 for reading in telemetry_data
@@ -86,7 +78,6 @@ class ReportGenerator: #control layter manages report table
                 f"({critical_count} critical, {high_count} high)"
             )
 
-            #reportdata obj
             report_id = f"report_{datetime.utcnow().timestamp()}"
             report = ReportData(
                 report_id=report_id,
@@ -99,13 +90,13 @@ class ReportGenerator: #control layter manages report table
                 data_points=data_points,
                 summary=summary,
             )
-            #reports table
             self._supabase.table("reports").insert(report.to_dict()).execute()
             logger.info(f"[ReportGenerator] Generated report: {report_id}")
             return report
         except Exception as exc:
             logger.error(f"[ReportGenerator] Failed to generate report: {exc}")
             return None
+
     def get_recent_reports(self, limit: int = 10) -> list:
         """Retrieve recent reports from the reports table."""
         try:
@@ -116,9 +107,7 @@ class ReportGenerator: #control layter manages report table
                 .limit(limit)
                 .execute()
             )
-            logger.info(
-                f"[ReportGenerator] Retrieved {len(response.data)} recent reports"
-            )
+            logger.info(f"[ReportGenerator] Retrieved {len(response.data)} recent reports")
             return response.data
         except Exception as exc:
             logger.error(f"[ReportGenerator] Failed to retrieve reports: {exc}")

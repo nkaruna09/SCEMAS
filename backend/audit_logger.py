@@ -1,6 +1,3 @@
-# Control layer - autid tlogging agent
-#will get all system events from telemprocessor and account management, and log them into the audit_log table.
-
 import logging
 import os
 from datetime import datetime
@@ -14,7 +11,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
-class AuditLogger: # control for managing audit log table
+class AuditLogger:
     def __init__(self) -> None:
         self._supabase: Client = create_client(
             os.environ["SUPABASE_URL"],
@@ -22,27 +19,23 @@ class AuditLogger: # control for managing audit log table
         )
 
     def log_telemetry_reading(self, reading: TelemetryReading) -> None:
-#log telemetry event, called by telemproc
         try:
             audit_entry = {
-                "user_id": None, # sys evet
+                "user_id": None,
                 "action": "INSERT",
                 "table_name": "telemetry_readings",
                 "new_val": reading.to_dict(),
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             self._supabase.table("audit_log").insert(audit_entry).execute()
-            logger.info(
-                f"[AuditLogger] Logged telemetry reading: {reading.sensor_id}"
-            )
+            logger.info(f"[AuditLogger] Logged telemetry reading: {reading.sensor_id}")
         except Exception as exc:
             logger.error(f"[AuditLogger] Failed to log telemetry reading: {exc}")
 
     def log_alert_event(self, alert: AlertNotification, action: str = "INSERT") -> None:
-        # log triggered, called by alertevalutator
         try:
             audit_entry = {
-                "user_id": None,  # System event (alert is auto-triggered by rule)
+                "user_id": None,
                 "action": action,
                 "table_name": "alerts",
                 "new_val": alert.to_dict(),
@@ -56,7 +49,6 @@ class AuditLogger: # control for managing audit log table
     def log_account_event(
         self, user_id: str, action: str, table_name: str, old_val=None, new_val=None
     ) -> None:
-        # account event loging
         try:
             audit_entry = {
                 "user_id": user_id,
@@ -74,18 +66,15 @@ class AuditLogger: # control for managing audit log table
     def retrieve_logs(
         self, table_filter: str = None, action_filter: str = None, limit: int = 200
     ) -> list:
-        # get audit log entries, can have filter, called by frontend via GET /audit API route.
         try:
             query = self._supabase.table("audit_log").select("*")
             if table_filter:
-                query =query.eq("table_name", table_filter)
+                query = query.eq("table_name", table_filter)
             if action_filter:
-                query= query.eq("action", action_filter)
+                query = query.eq("action", action_filter)
             query = query.order("timestamp", desc=True).limit(limit)
-            response =query.execute()
-            logger.info(
-                f"[AuditLogger] Retrieved {len(response.data)} audit log entries"
-            )
+            response = query.execute()
+            logger.info(f"[AuditLogger] Retrieved {len(response.data)} audit log entries")
             return response.data
         except Exception as exc:
             logger.error(f"[AuditLogger] Failed to retrieve audit logs: {exc}")

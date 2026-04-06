@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class AlertEvaluator:
-    # loads rules evanyate readings and send alerts
     def __init__(self) -> None:
         self._active_rules: dict[str, list[AlertRule]] = {}
         self._alert_severity: str = ""
@@ -25,7 +24,6 @@ class AlertEvaluator:
         )
 
     def load_alert_rules(self) -> None:
-        # fetch rules from DB at startup
         try:
             response = self._supabase.table("alert_rules").select("*").execute()
             self._active_rules.clear()
@@ -46,7 +44,6 @@ class AlertEvaluator:
             logger.error(f"[AlertEvaluator] Failed to load alert rules: {exc}")
 
     def evaluate_data(self, reading: TelemetryReading) -> None:
-        # check rules for each metric type
         rules = self._active_rules.get(reading.telemetry_type)
         if not rules:
             logger.debug(f"[AlertEvaluator] No rules for '{reading.telemetry_type}', skipping")
@@ -62,7 +59,6 @@ class AlertEvaluator:
                 )
 
     def check_alert_rules(self, value: float, telemetry_type: str, rule: AlertRule) -> bool:
-        # true if value is within the acceptable range
         op = rule.operator
         t = rule.threshold_value
         if op == ">":   return not (value > t)
@@ -74,7 +70,6 @@ class AlertEvaluator:
         return True
 
     def monitor_alert_severity(self, value: float, rule: AlertRule) -> str:
-        # check delta from threshold
         delta = abs(value - rule.threshold_value)
         if delta <= 5:   return "low"
         if delta <= 15:  return "medium"
@@ -82,7 +77,6 @@ class AlertEvaluator:
         return "critical"
 
     def trigger_alert(self, alert: AlertNotification) -> None:
-        # insert the alert into supabase and log it
         try:
             self._supabase.table("alerts").insert(alert.to_dict()).execute()
             alert.display_alert()
@@ -94,9 +88,9 @@ class AlertEvaluator:
         logger.info("[AlertEvaluator] Threshold exceeded — notification dispatched")
 
     def _notify_threshold_exceeded(self, reading: TelemetryReading, rule: AlertRule) -> None:
-        # skip if any active/acknowledged alert already exists for this sensor+metric_type
-        # (checks all rules for the same metric type, not just this rule, to prevent one
-        # alert per rule when multiple rules share the same metric type)
+        # Deduplicate: skip if any active/acknowledged alert already exists for this
+        # sensor+metric_type. Checks all rules sharing the metric type to prevent one
+        # alert per rule when multiple rules cover the same metric.
         try:
             metric_rule_ids = [
                 r.id for r in self._active_rules.get(rule.metric_type, [])
@@ -134,11 +128,8 @@ class AlertEvaluator:
         self.trigger_alert(alert)
         self.notify_threshold_exceeded()
 
-#control layer for alert tule managemnt
     def create_alert_rule(self, rule_data) -> dict:
-        #make and validate new rule, called by FastAPI POST /alert-rules endpoint
         try:
-            #input validation
             if not rule_data.metric_type or not rule_data.operator or not rule_data.severity:
                 return None
 
@@ -166,7 +157,6 @@ class AlertEvaluator:
             return None
 
     def update_alert_rule(self, rule_id: str, rule_data) -> dict:
-        #update rule, same process as craete
         try:
             if not rule_data.metric_type or not rule_data.operator or not rule_data.severity:
                 return None
@@ -186,9 +176,7 @@ class AlertEvaluator:
                 logger.warning(f"[AlertEvaluator] Alert rule not found: {rule_id}")
                 return None
 
-            #refresh cache, reload rules from db
             self.load_alert_rules()
-
             logger.info(f"[AlertEvaluator] Updated alert rule: {rule_id}")
             return rule_dict
         except Exception as exc:
@@ -196,7 +184,6 @@ class AlertEvaluator:
             return None
 
     def delete_alert_rule(self, rule_id: str) -> bool:
-        #dleete alert rule, called by FastAPI DELETE /alert-rules/{id} endpoint.
         try:
             response = (
                 self._supabase.table("alert_rules").delete().eq("id", rule_id).execute()
@@ -204,18 +191,14 @@ class AlertEvaluator:
             if not response.data:
                 logger.warning(f"[AlertEvaluator] Alert rule not found: {rule_id}")
                 return False
-            # Reload rules
             self.load_alert_rules()
-
             logger.info(f"[AlertEvaluator] Deleted alert rule: {rule_id}")
             return True
         except Exception as exc:
             logger.error(f"[AlertEvaluator] Failed to delete alert rule: {exc}")
             return False
 
-    #control layer for alert status mgmt
     def update_alert_status(self, alert_id: str, status: str) -> bool:
-        #uodate or change alert syatus
         try:
             if status not in ["acknowledged", "resolved"]:
                 logger.warning(f"[AlertEvaluator] Invalid status: {status}")
@@ -223,7 +206,6 @@ class AlertEvaluator:
             update_dict = {"status": status}
             if status == "resolved":
                 update_dict["resolved_at"] = datetime.now(timezone.utc).isoformat()
-            #db update
             response = (
                 self._supabase.table("alerts")
                 .update(update_dict)
@@ -238,4 +220,3 @@ class AlertEvaluator:
         except Exception as exc:
             logger.error(f"[AlertEvaluator] Failed to update alert status: {exc}")
             return False
-
