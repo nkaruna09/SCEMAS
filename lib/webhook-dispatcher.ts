@@ -16,7 +16,6 @@ type AlertPayload = {
   metric_type?: string
 }
 
-//use HMAC-SHA256 sig so we can confirm payload packet from us
 async function sign(secret: string, body: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
@@ -32,7 +31,6 @@ async function sign(secret: string, body: string): Promise<string> {
 export async function dispatchWebhooks(alerts: AlertPayload[]) {
   if (alerts.length === 0) return
 
-  //getactive subscriptions
   const { data: subs, error } = await supabaseAdmin
     .from('webhook_subscriptions')
     .select('id, url, secret')
@@ -42,7 +40,6 @@ export async function dispatchWebhooks(alerts: AlertPayload[]) {
 
   const payload = JSON.stringify({ event: 'alert.triggered', alerts, timestamp: new Date().toISOString() })
 
-  //fire all webhooks parallel dont block if fail
   await Promise.allSettled(
     subs.map(async (sub) => {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }

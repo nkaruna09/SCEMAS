@@ -12,8 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 class TelemetryProcessor:
-    #telemetry control layer, set ingestion pipeline, validate, store, then call alert eval and audit log control layers
-
     def __init__(self, alert_evaluator=None, audit_logger=None) -> None:
         self.ingestion_buffer: list[TelemetryReading] = []
         self._active_sensors: list[str] = []
@@ -21,7 +19,6 @@ class TelemetryProcessor:
             os.environ["SUPABASE_URL"],
             os.environ["SUPABASE_SERVICE_ROLE_KEY"],
         )
-        # References to other Control layer agents
         self._alert_evaluator = alert_evaluator
         self._audit_logger = audit_logger
 
@@ -34,7 +31,6 @@ class TelemetryProcessor:
 
         if self.validate_telemetry(reading):
             self.store_telemetry(reading)
-            #PAC control layer -telemetryProcessor links calls to sibling agents
             if self._alert_evaluator:
                 self._alert_evaluator.evaluate_data(reading)
             if self._audit_logger:
@@ -44,7 +40,6 @@ class TelemetryProcessor:
             logger.warning(f"[TelemetryProcessor] Invalid reading from {reading.sensor_id}, skipping")
 
     def validate_telemetry(self, reading: TelemetryReading) -> bool:
-        # validate after sensorreading
         if not reading.is_valid:
             return False
         if not reading.sensor_id or not isinstance(reading.sensor_id, str):
@@ -60,7 +55,6 @@ class TelemetryProcessor:
         return True
 
     def store_telemetry(self, reading: TelemetryReading) -> None:
-        # insert into supabase db
         try:
             self._supabase.table("telemetry_readings").insert(reading.to_dict()).execute()
             logger.info(
@@ -71,7 +65,6 @@ class TelemetryProcessor:
             logger.error(f"[TelemetryProcessor] Failed to store reading: {exc}")
 
     def forward_alert(self, reading: TelemetryReading) -> None:
-        # call when detect issue
         logger.info(f"[TelemetryProcessor] Alert forwarded for sensor={reading.sensor_id}")
 
     def notify_dashboard(self) -> None:

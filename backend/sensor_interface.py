@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class SensorInterface:
-    # validates raw sensor packets
     def __init__(self, sensor_id, sensor_type, telemetry_type, raw_data_value, city_location):
         self._sensor_id = sensor_id
         self._sensor_type = sensor_type
@@ -17,7 +16,6 @@ class SensorInterface:
         self._city_location = city_location
 
     def validate_packet(self) -> bool:
-        # check req fields
         if not self._sensor_id or not isinstance(self._sensor_id, str):
             self._display_sensor_interface_error("sensor_id is missing or not a string")
             return False
@@ -45,7 +43,6 @@ class SensorInterface:
         return True
 
     def transmit_telemetry(self) -> TelemetryReading | None:
-        # validate and package into a TelemetryReading return none f false
         if not self.validate_packet():
             return None
         return TelemetryReading(

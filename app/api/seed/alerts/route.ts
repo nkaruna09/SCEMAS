@@ -7,7 +7,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST() {
   try {
-    // First, create some placeholder zones
     const { data: existingZones } = await supabase
       .from('zones')
       .select('*')
@@ -35,7 +34,6 @@ export async function POST() {
       zone = existingZones[0]
     }
 
-    // Create placeholder sensors
     const { data: existingSensors } = await supabase
       .from('sensors')
       .select('*')
@@ -52,6 +50,8 @@ export async function POST() {
             metric_type: 'temperature',
             status: 'active',
             approved: true,
+            latitude: 43.2609,
+            longitude: -79.9192,
           },
           {
             name: 'Humidity Sensor - Library',
@@ -59,6 +59,8 @@ export async function POST() {
             metric_type: 'humidity',
             status: 'active',
             approved: true,
+            latitude: 43.2628,
+            longitude: -79.9175,
           },
           {
             name: 'Air Quality Sensor - Park',
@@ -66,6 +68,8 @@ export async function POST() {
             metric_type: 'air_quality',
             status: 'active',
             approved: true,
+            latitude: 43.2650,
+            longitude: -79.9235,
           },
           {
             name: 'Pressure Sensor - Harbor',
@@ -73,6 +77,8 @@ export async function POST() {
             metric_type: 'pressure',
             status: 'active',
             approved: true,
+            latitude: 43.2571,
+            longitude: -79.9173,
           },
           {
             name: 'Temperature Sensor - Hospital',
@@ -80,6 +86,8 @@ export async function POST() {
             metric_type: 'temperature',
             status: 'active',
             approved: true,
+            latitude: 43.2597,
+            longitude: -79.9158,
           },
         ])
         .select()
@@ -87,7 +95,6 @@ export async function POST() {
       sensors = createdSensors || []
     }
 
-    // Create alert rules
     const { data: existingRules } = await supabase
       .from('alert_rules')
       .select('*')
@@ -128,7 +135,6 @@ export async function POST() {
       rules = createdRules || []
     }
 
-    // Create fake alerts
     const now = new Date()
     const fakeAlerts = [
       {
@@ -214,7 +220,6 @@ export async function POST() {
 
 export async function DELETE() {
   try {
-    // Delete alerts first (foreign key constraints)
     const { error: alertsError } = await supabase
       .from('alerts')
       .delete()
@@ -222,7 +227,6 @@ export async function DELETE() {
 
     if (alertsError) throw alertsError
 
-    // Delete alert rules
     const { error: rulesError } = await supabase
       .from('alert_rules')
       .delete()
@@ -230,7 +234,6 @@ export async function DELETE() {
 
     if (rulesError) throw rulesError
 
-    // Delete sensors
     const { error: sensorsError } = await supabase
       .from('sensors')
       .delete()
@@ -238,7 +241,6 @@ export async function DELETE() {
 
     if (sensorsError) throw sensorsError
 
-    // Delete zones
     const { error: zonesError } = await supabase
       .from('zones')
       .delete()
