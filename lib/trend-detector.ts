@@ -74,7 +74,7 @@ export async function runTrendDetection(sensor_id: string, metric_type: string, 
     rule_id: null,
     value: latestValue,
     status: 'active',
-    severity: 'trend',
+    alert_type: 'trend',
   })
 
   console.info(`trend alert created for sensor ${sensor_id}: ${anomaly}`)
