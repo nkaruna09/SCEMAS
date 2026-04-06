@@ -30,6 +30,7 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith('/api/ingest')) return response
   if (pathname.startsWith('/api/webhooks')) return response
   if (pathname.startsWith('/signage')) return response
+  if (pathname.startsWith('/docs')) return response
 
   // Unauthenticated user hitting a protected route → login
   if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/pending')) {
