@@ -55,8 +55,7 @@ const fetchSensors = async () => {
 };
 
   const handleApprove = async (id: string) => {
-    await supabase
-      .from("sensors")
+    await (supabase.from("sensors") as any)
       .update({ status: "active" })
       .eq("id", id);
     setSensors((prev) =>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import GraphDisplay from '@/components/GraphDisplay'
+import RealtimeGraphDisplay from '@/components/RealtimeGraphDisplay'
 import { createClient } from '@/lib/supabase/client'
 import type { SensorRow, AlertRow } from '@/lib/types/database'
 
@@ -33,32 +33,52 @@ export default function GovernmentDashboard() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [hasInitialized, setHasInitialized] = useState(false)
 
   const supabase = createClient()
 
   useEffect(() => {
-    fetchData()
+    // Only load once on mount
+    if (!hasInitialized) {
+      fetchData()
+      setHasInitialized(true)
+    }
 
-    // Real-time subscriptions
+    // Subscribe for updates - only alert changes, not telemetry
     const alertsChannel = supabase
       .channel('government-alerts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => {
-        fetchData()
-      })
-      .subscribe()
-
-    const telemetryChannel = supabase
-      .channel('government-telemetry')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'telemetry_readings' }, () => {
-        fetchData()
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, (payload) => {
+        // Incrementally update alerts instead of full refetch
+        if (payload.eventType === 'INSERT') {
+          // Increment active alerts count
+          setStats((prev) => ({
+            ...prev,
+            activeAlerts: prev.activeAlerts + 1,
+            criticalAlerts:
+              payload.new.severity === 'critical'
+                ? prev.criticalAlerts + 1
+                : prev.criticalAlerts,
+          }))
+        } else if (payload.eventType === 'UPDATE') {
+          // If alert status changed from active to resolved
+          if (payload.old.status === 'active' && payload.new.status === 'resolved') {
+            setStats((prev) => ({
+              ...prev,
+              activeAlerts: Math.max(0, prev.activeAlerts - 1),
+              criticalAlerts:
+                payload.old.severity === 'critical'
+                  ? Math.max(0, prev.criticalAlerts - 1)
+                  : prev.criticalAlerts,
+            }))
+          }
+        }
       })
       .subscribe()
 
     return () => {
       supabase.removeChannel(alertsChannel)
-      supabase.removeChannel(telemetryChannel)
     }
-  }, [])
+  }, [hasInitialized])
 
   const fetchData = async () => {
     try {
@@ -278,7 +298,7 @@ export default function GovernmentDashboard() {
       {/* Environmental Overview */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold mb-4">Environmental Overview</h2>
-        <GraphDisplay />
+        <RealtimeGraphDisplay />
       </div>
     </main>
   )
