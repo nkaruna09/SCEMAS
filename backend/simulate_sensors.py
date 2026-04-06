@@ -11,7 +11,7 @@ from supabase import create_client
 
 load_dotenv()
 
-FASTAPI_BASE = "http://localhost:8000"
+FASTAPI_BASE = os.getenv("FASTAPI_BASE", "http://localhost:8000")
 SENSOR_API_KEY = os.getenv("SENSOR_API_KEY", "")
 HEADERS = {"Content-Type": "application/json", "x-api-key": SENSOR_API_KEY}
 
