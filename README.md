@@ -93,6 +93,24 @@ $headers = @{ "x-api-key" = "your-api-key"; "Content-Type" = "application/json" 
 ```
 A trend alert should appear on the Alerts page within a few seconds.
 
+## Predictive alerts
+
+The system uses linear regression on the last 10 readings to forecast future values. If the projected value (5 steps ahead) would cross an existing alert rule threshold, an orange **predicted** alert is created before the threshold is actually reached.
+
+To test, send readings that approach but don't cross a threshold (adjust values to stay below your rule's threshold):
+```powershell
+@(100, 110, 115, 120, 125, 130, 135, 140, 143, 146) | ForEach-Object {
+  $body = "{`"sensor_id`": `"$sensorId`", `"zone_id`": `"$zoneId`", `"metric_type`": `"air_quality`", `"value`": $_}"
+  Invoke-WebRequest -Uri http://localhost:3000/api/ingest `
+    -Method POST -UseBasicParsing `
+    -Headers @{"x-api-key" = $apiKey} `
+    -ContentType "application/json" `
+    -Body $body | Select-Object StatusCode
+  Start-Sleep -Milliseconds 300
+}
+```
+An orange **predicted** badge should appear on the Alerts page. The threshold column will show what rule would be violated.
+
 ## Webhook notifications
 
 External systems can subscribe to receive a POST request whenever a new alert is triggered.

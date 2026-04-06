@@ -44,6 +44,7 @@ export type AlertRow = {
   sensor_id: string
   value: number
   severity?: string
+  alert_type?: 'rule' | 'trend' | 'predicted'
   status: 'active' | 'acknowledged' | 'resolved'
   triggered_at: string
   resolved_at?: string
