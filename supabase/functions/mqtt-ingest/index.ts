@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
+import { serve } from 'https://deno.land/std/http/server.ts'
 
 //hivemq sends post with this frmat
 interface HiveMQWebhookPayload {
