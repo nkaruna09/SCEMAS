@@ -7,7 +7,7 @@ const BROKER_URL = 'mqtts://db47f22de22643b0a64e5e5856af2e9a.s1.eu.hivemq.cloud:
 const MQTT_USER  = process.env.MQTT_USER || 'your-hivemq-username'
 const MQTT_PASS  = process.env.MQTT_PASS || 'your-hivemq-password'
 const TOPIC      = 'scemas/readings'
-const APP_URL    = process.env.FRONTEND_URL || 'http://localhost:3000'
+const APP_URL    = process.env.FRONTEND_URL
 
 //send 10 rising air_quality readings to trigger trend and predicted alerts
 const readings = [100, 110, 115, 120, 125, 130, 135, 140, 143, 146]

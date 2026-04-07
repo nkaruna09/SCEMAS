@@ -519,7 +519,7 @@ export default function RealtimeGraphDisplay() {
                   strokeDasharray="5 5"
                   strokeWidth={2}
                   label={{
-                    value: '→ Predictions Start Here',
+                    value: '',
                     position: 'insideBottomRight',
                     offset: -5,
                     fill: '#dc2626',
