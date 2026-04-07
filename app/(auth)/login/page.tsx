@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 type Mode = 'login' | 'signup'
 
@@ -109,6 +110,15 @@ export default function LoginPage() {
             {mode === 'login' ? 'Sign up' : 'Sign in'}
           </button>
         </p>
+
+        <div className="pt-4 border-t border-gray-200">
+          <Link
+            href="http://localhost:3000/signage"
+            className="block w-full text-center bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition"
+          >
+            Access Public API Signage
+          </Link>
+        </div>
       </div>
     </main>
   )

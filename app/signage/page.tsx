@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 type Alert = {
   id: string
@@ -79,7 +80,6 @@ export default function SignagePage() {
         <p className="text-2xl font-mono text-gray-300" suppressHydrationWarning>{now.toLocaleTimeString()}</p>
       </div>
 
-      {/* alerts */}
       <div>
         <h2 className="text-gray-400 uppercase text-sm tracking-widest mb-3">Active Alerts</h2>
         {alerts.length === 0 ? (
@@ -97,7 +97,6 @@ export default function SignagePage() {
         )}
       </div>
 
-      {/*readings */}
       <div>
         <h2 className="text-gray-400 uppercase text-sm tracking-widest mb-3">Current Readings</h2>
         {readings.length === 0 ? (
@@ -113,7 +112,37 @@ export default function SignagePage() {
           </div>
         )}
       </div>
+
       <p className="text-gray-600 text-xs" suppressHydrationWarning>Refreshes every 30s · {now.toLocaleDateString()}</p>
+
+      <div className="pt-8 border-t border-gray-700 space-y-3">
+        <div className="flex flex-col gap-3 md:flex-row md:gap-4">
+          <Link
+            href="https://scemas-alpha.vercel.app/login"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-lg text-center font-medium transition"
+          >
+            Back to Login
+          </Link>
+          <a
+            href="http://localhost:3000/api/public/sensors"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-center font-medium transition"
+          >
+            Developer Mode: Public API Endpoint
+          </a>
+          <a
+            href="http://localhost:3000/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg text-center font-medium transition"
+          >
+            View Public API Docs
+          </a>
+        </div>
+      </div>
     </div>
   )
 }
